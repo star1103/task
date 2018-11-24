@@ -1,0 +1,134 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 24 19:09:00 2018
+
+@author: ywm
+"""
+
+import pandas as pd
+import re 
+import requests
+
+filename = open('F:/python/80k_articles.txt')
+all_content = filename.read()
+len(all_content)
+
+def tokenize(string): 
+    return ''.join(re.findall('[\w|\d]+', string))
+
+ALL_CHARACTER = tokenize(all_content)
+len(ALL_CHARACTER)
+
+from collections import Counter
+L = [1, 1, 2, 3, 4, 4, 4]
+Counter(L)
+all_character_counts = Counter(ALL_CHARACTER)
+all_character_counts.most_common()
+
+import  matplotlib.pyplot  as plt
+M = all_character_counts.most_common()[0][1]
+M
+from matplotlib.pyplot import yscale, xscale, title, plot
+yscale('log'); xscale('log'); title('Frequency of n-th most frequent word and 1/n line.')
+plot([c for (w, c) in all_character_counts.most_common()])
+plot([M/i for i in range(1, len(all_character_counts)+1)])
+all_character_counts.get('💰', 1)
+
+def get_probability_from_counts(count):
+    all_occurences = sum(count.values())
+    def get_prob(item): 
+        return count[item] / all_occurences
+    return get_prob
+
+get_char_prob = get_probability_from_counts(all_character_counts)
+
+def get_char_probability(char): 
+    all_occurences = sum(all_character_counts.values())
+    return all_character_counts[char] / all_occurences
+import time
+def get_running_time(func, arg, times):
+    start_time = time.time()
+    for _ in range(times):
+        func(arg)
+    print('\t\t {} used time is {}'.format(func.__name__, time.time() - start_time))
+import random
+random_chars = random.sample(ALL_CHARACTER, 1000)
+get_running_time(get_char_probability, '神', 10000)
+get_running_time(get_char_prob, '神', 10000)
+		
+from functools import reduce
+from operator import mul, add
+reduce(add, range(1, 101))
+
+def prob_of_string(string):
+    return reduce(mul, [get_char_prob(c) for c in string])
+
+prob_of_string('这是一个比较常见测试用例')
+prob_of_string('这是一个比较罕见的测试用例')
+print(prob_of_string('广州有一个地方叫做沥窖'))
+print(prob_of_string('杭州有一个地方叫做西湖'))
+pair = """前天晚上吃晚饭的时候
+前天晚上吃早饭的时候""".split('\n')
+
+pair2 = """正是一个好看的小猫
+真是一个好看的小猫""".split('\n')
+
+pair3 = """我无言以对，简直
+我简直无言以对""".split('\n')
+pairs = [pair, pair2, pair3]
+def get_probability_prefromance(language_model_func, pairs):
+    for (p1, p2) in pairs:
+        print('*'*18)
+        print('\t\t {} with probability {}'.format(p1, language_model_func(tokenize(p1))))
+        print('\t\t {} with probability {}'.format(p2, language_model_func(tokenize(p2))))
+
+get_probability_prefromance(prob_of_string, pairs)
+
+ALL_CHARACTER[:100]
+
+gram_length = 2
+two_gram_counts = Counter(ALL_CHARACTER[i:i+gram_length] for i in range(len(ALL_CHARACTER) - gram_length))
+
+two_gram_counts.most_common()[:20]
+
+get_pair_prob = get_probability_from_counts(two_gram_counts)
+
+def get_2_gram_prob(word, prev):
+    if get_pair_prob(word+prev) > 0: 
+        return get_pair_prob(word+prev) / get_char_prob(prev)
+    else:
+        return get_char_prob(word)
+    
+def get_2_gram_string_prob(string):
+    probablities = []
+    for i, c in enumerate(string):
+        prev = '<s>' if i == 0 else string[i-1]
+        probablities.append(get_2_gram_prob(c, prev))
+    return reduce(mul, probablities)
+
+get_probability_prefromance(prob_of_string, pairs)
+
+string_pair = ['发表了重要的讲话', '发表了重要的僵化']
+
+get_2_gram_string_prob(string_pair[0])
+get_2_gram_string_prob(string_pair[1])
+
+titanic_content = pd.read_csv(open('F:/datasource/titanic_train.csv'))
+titanic_content[:10]
+titanic_content = pd.read_csv(open('F:/datasource/titanic_train.csv'))
+titanic_content = titanic_content.dropna()
+age_with_fare = titanic_content[['Age', 'Fare']]
+age_with_fare = age_with_fare[ (age_with_fare['Age'] > 22) & (age_with_fare['Fare'] < 400) &  (age_with_fare['Fare'] > 130)]
+age = age_with_fare['Age']
+fare = age_with_fare['Fare']
+
+import numpy as np
+L1 = np.array([1,2, 3])
+L2 = np.mean(np.array([2, 3, 4]))
+L2
+np.abs((L2 - L1)) ** 2
+
+def loss(y_true, yhats): return np.mean(np.abs(y_true - yhats))
+
+## boradcast
+plt.scatter(age, fare)
